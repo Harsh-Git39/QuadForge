@@ -292,6 +292,19 @@ async def get_automation_stats():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch stats: {str(e)}")
 
+@api_router.get("/tenders")
+async def get_active_tenders():
+    """Get all active tenders"""
+    try:
+        tenders = await db.tender_updates.find(
+            {"status": "OPEN"},
+            {"_id": 0}
+        ).sort("timestamp", -1).to_list(100)
+        
+        return tenders
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch tenders: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
