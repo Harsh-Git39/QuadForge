@@ -1,6 +1,6 @@
 import "@/App.css";
 import { BrowserRouter, Routes, Route, Link, useLocation } from "react-router-dom";
-import { Lock, FileSearch, Shield, Home } from "lucide-react";
+import { Lock, Brain, Database, Home, Shield, Zap } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import UploadBid from "@/pages/UploadBid";
 import ComplianceCheck from "@/pages/ComplianceCheck";
@@ -10,40 +10,34 @@ function Navigation() {
   const location = useLocation();
   
   const navItems = [
-    { path: '/', icon: Home, label: 'Home' },
-    { path: '/upload', icon: Lock, label: 'Seal Bid' },
-    { path: '/check', icon: FileSearch, label: 'Compliance' },
-    { path: '/audit', icon: Shield, label: 'Audit Log' }
+    { path: '/', icon: Home, label: 'HOME' },
+    { path: '/upload', icon: Lock, label: 'SEAL' },
+    { path: '/check', icon: Brain, label: 'COMPLIANCE' },
+    { path: '/audit', icon: Database, label: 'AUDIT' }
   ];
 
   return (
-    <nav className="bg-white shadow-md border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <Shield className="w-8 h-8 text-emerald-600" />
-            <span className="font-bold text-xl text-slate-900">AI Tender Guardian</span>
-          </div>
-          <div className="flex gap-1">
-            {navItems.map(({ path, icon: Icon, label }) => {
-              const isActive = location.pathname === path;
-              return (
-                <Link
-                  key={path}
-                  to={path}
-                  data-testid={`nav-${label.toLowerCase().replace(' ', '-')}`}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-emerald-100 text-emerald-700 font-medium'
-                      : 'text-slate-600 hover:bg-slate-100'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {label}
-                </Link>
-              );
-            })}
-          </div>
+    <nav className="nav-container">
+      <div className="nav-content">
+        <Link to="/" className="nav-logo">
+          <Shield className="nav-logo-icon" size={32} />
+          AI TENDER GUARDIAN
+        </Link>
+        <div className="nav-links">
+          {navItems.map(({ path, icon: Icon, label }) => {
+            const isActive = location.pathname === path;
+            return (
+              <Link
+                key={path}
+                to={path}
+                data-testid={`nav-${label.toLowerCase()}`}
+                className={`nav-link ${isActive ? 'active' : ''}`}
+              >
+                <Icon size={18} />
+                {label}
+              </Link>
+            );
+          })}
         </div>
       </div>
     </nav>
@@ -52,50 +46,68 @@ function Navigation() {
 
 function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center p-8">
-      <div className="max-w-4xl text-center">
-        <div className="mb-8">
-          <Shield className="w-24 h-24 mx-auto text-emerald-600 mb-4" />
-          <h1 className="text-5xl font-bold text-slate-900 mb-4">
-            AI Tender Guardian
-          </h1>
-          <p className="text-xl text-slate-600">
-            Sealed-bid anchoring with AI compliance checking and immutable audit logs
+    <div className="page-container">
+      <div className="grid-background"></div>
+      
+      <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+          <Shield size={80} style={{ color: 'var(--accent-green)', filter: 'drop-shadow(0 0 20px var(--accent-green))' }} />
+        </div>
+        <h1 style={{ fontSize: '4rem', fontWeight: '700', marginBottom: '1rem', fontFamily: 'JetBrains Mono', color: 'var(--text-primary)' }}>
+          AI TENDER GUARDIAN
+        </h1>
+        <p style={{ fontSize: '1.5rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+          Autonomous Procurement System
+        </p>
+        <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', maxWidth: '800px', margin: '0 auto', lineHeight: '1.8' }}>
+          Military-grade encryption • AI compliance detection • Immutable audit trail • Zero external dependencies
+        </p>
+      </div>
+
+      <div className="home-grid">
+        <Link to="/upload" data-testid="home-upload-card" className="home-card">
+          <Lock className="home-card-icon" size={48} />
+          <h3 className="home-card-title">BID ENCRYPTION</h3>
+          <p className="home-card-description">
+            AES-256 encryption with SHA-3-512 hashing. Automatic notifications sent on seal.
           </p>
+        </Link>
+
+        <Link to="/check" data-testid="home-compliance-card" className="home-card">
+          <Brain className="home-card-icon" size={48} />
+          <h3 className="home-card-title">AI COMPLIANCE</h3>
+          <p className="home-card-description">
+            Google Gemini 3 Flash real-time analysis. Sub-second violation detection.
+          </p>
+        </Link>
+
+        <Link to="/audit" data-testid="home-audit-card" className="home-card">
+          <Database className="home-card-icon" size={48} />
+          <h3 className="home-card-title">AUDIT LOG</h3>
+          <p className="home-card-description">
+            Cryptographic proof of all transactions. Tamper-proof transparency.
+          </p>
+        </Link>
+      </div>
+
+      <div className="card" style={{ marginTop: '4rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+          <Zap style={{ color: 'var(--accent-green)' }} size={32} />
+          <h2 className="card-title">AUTONOMOUS FEATURES</h2>
         </div>
-
-        <div className="grid md:grid-cols-3 gap-6 mt-12">
-          <Link to="/upload" data-testid="home-upload-card">
-            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer border-2 border-transparent hover:border-emerald-500">
-              <Lock className="w-12 h-12 mx-auto text-emerald-600 mb-3" />
-              <h3 className="font-bold text-lg text-slate-900 mb-2">Bid Sealing</h3>
-              <p className="text-sm text-slate-600">AES-256 encryption with SHA-3-512 hashing</p>
-            </div>
-          </Link>
-
-          <Link to="/check" data-testid="home-compliance-card">
-            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer border-2 border-transparent hover:border-indigo-500">
-              <FileSearch className="w-12 h-12 mx-auto text-indigo-600 mb-3" />
-              <h3 className="font-bold text-lg text-slate-900 mb-2">AI Compliance</h3>
-              <p className="text-sm text-slate-600">Powered by Google Gemini</p>
-            </div>
-          </Link>
-
-          <Link to="/audit" data-testid="home-audit-card">
-            <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow cursor-pointer border-2 border-transparent hover:border-violet-500">
-              <Shield className="w-12 h-12 mx-auto text-violet-600 mb-3" />
-              <h3 className="font-bold text-lg text-slate-900 mb-2">Audit Log</h3>
-              <p className="text-sm text-slate-600">Immutable transparency</p>
-            </div>
-          </Link>
-        </div>
-
-        <div className="mt-12 p-6 bg-white rounded-xl shadow-lg">
-          <h3 className="font-bold text-lg text-slate-900 mb-4">n8n Governance Webhook</h3>
-          <p className="text-sm text-slate-600 mb-2">Endpoint for tender updates:</p>
-          <code className="block bg-slate-100 p-3 rounded text-sm font-mono text-left">
-            POST {process.env.REACT_APP_BACKEND_URL}/api/tender-update
-          </code>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+          <div>
+            <h4 style={{ fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>AUTO-NOTIFICATIONS</h4>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>Instant email alerts on bid sealing with cryptographic proof</p>
+          </div>
+          <div>
+            <h4 style={{ fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>AUTO-COMPLIANCE</h4>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>Scheduled batch compliance checks after tender deadlines</p>
+          </div>
+          <div>
+            <h4 style={{ fontSize: '0.9rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>AUTO-REPORTS</h4>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.6' }}>Daily analytics and activity summaries generated automatically</p>
+          </div>
         </div>
       </div>
     </div>
@@ -107,7 +119,7 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <Navigation />
-        <Toaster position="top-right" />
+        <Toaster position="top-right" theme="dark" />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/upload" element={<UploadBid />} />

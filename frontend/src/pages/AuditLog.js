@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Shield, Clock, Hash, User, FileCheck } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Database, Clock, Hash, User, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -10,20 +8,25 @@ const API = `${BACKEND_URL}/api`;
 
 export default function AuditLog() {
   const [auditLog, setAuditLog] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchAuditLog();
+    fetchData();
   }, []);
 
-  const fetchAuditLog = async () => {
+  const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API}/audit-log`);
-      setAuditLog(response.data);
+      const [auditRes, statsRes] = await Promise.all([
+        axios.get(`${API}/audit`),
+        axios.get(`${API}/stats`)
+      ]);
+      setAuditLog(auditRes.data);
+      setStats(statsRes.data);
     } catch (error) {
-      console.error('Error fetching audit log:', error);
-      toast.error('Failed to fetch audit log');
+      console.error('Failed to fetch data:', error);
+      toast.error('Failed to load audit log');
     } finally {
       setLoading(false);
     }
@@ -37,87 +40,103 @@ export default function AuditLog() {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
+      hour12: false
     });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 to-purple-50 p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-slate-900 mb-2 flex items-center gap-3">
-            <Shield className="w-10 h-10 text-violet-600" />
-            Immutable Audit Log
-          </h1>
-          <p className="text-slate-600">Complete history of all sealed bids - tamper-proof and transparent</p>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-12 h-12 border-4 border-violet-600 border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : auditLog.length === 0 ? (
-          <Card className="shadow-lg">
-            <CardContent className="py-20 text-center">
-              <FileCheck className="w-16 h-16 mx-auto text-slate-300 mb-4" />
-              <p className="text-slate-500 text-lg">No sealed bids yet</p>
-              <p className="text-slate-400 text-sm mt-2">Upload your first bid to see it in the audit log</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="space-y-4">
-            <div data-testid="audit-log-count" className="text-sm text-slate-600 mb-4">
-              Total Entries: <strong>{auditLog.length}</strong>
-            </div>
-            {auditLog.map((entry, index) => (
-              <Card key={index} data-testid={`audit-entry-${index}`} className="shadow-lg hover:shadow-xl transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg flex items-center gap-2">
-                        <Hash className="w-5 h-5 text-violet-600" />
-                        {entry.tenderId}
-                      </CardTitle>
-                      <CardDescription className="flex items-center gap-2 mt-1">
-                        <Clock className="w-4 h-4" />
-                        {formatDate(entry.timestamp)}
-                      </CardDescription>
-                    </div>
-                    <Badge 
-                      variant={entry.status === 'SEALED' ? 'default' : 'secondary'}
-                      className="bg-green-100 text-green-700 hover:bg-green-200"
-                    >
-                      {entry.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-2">
-                      <User className="w-4 h-4 text-slate-500 mt-1" />
-                      <div className="flex-1">
-                        <div className="text-xs text-slate-500 mb-1">Bidder ID</div>
-                        <div className="font-mono text-xs bg-slate-50 p-2 rounded break-all">
-                          {entry.bidderId}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <Hash className="w-4 h-4 text-slate-500 mt-1" />
-                      <div className="flex-1">
-                        <div className="text-xs text-slate-500 mb-1">Bid Hash (SHA-3-512)</div>
-                        <div className="font-mono text-xs bg-slate-50 p-2 rounded break-all">
-                          {entry.bidHash}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+    <div className="page-container">
+      <div className="grid-background"></div>
+      
+      <div className="page-header">
+        <h1 className="page-title">
+          <Database className="page-title-icon" size={48} />
+          AUDIT LOG
+        </h1>
+        <p className="page-description">
+          Immutable cryptographic record | Tamper-proof transparency | Complete chain of custody
+        </p>
       </div>
+
+      {stats && (
+        <div className="stats-bar">
+          <div className="stat-card">
+            <div className="stat-value">{stats.total_bids}</div>
+            <div className="stat-label">Total Bids</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value">{stats.total_tenders}</div>
+            <div className="stat-label">Total Tenders</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value">{stats.last_24h_bids}</div>
+            <div className="stat-label">Last 24h Bids</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value">{stats.automation_events}</div>
+            <div className="stat-label">Automation Events</div>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '5rem' }}>
+          <div className="spinner" style={{ width: '48px', height: '48px', borderWidth: '4px', borderColor: 'var(--accent-green)', borderTopColor: 'transparent' }} />
+        </div>
+      ) : auditLog.length === 0 ? (
+        <div className="card" style={{ textAlign: 'center', padding: '5rem' }}>
+          <Activity size={64} style={{ color: 'var(--text-muted)', margin: '0 auto 1.5rem' }} />
+          <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>NO SEALED BIDS YET</h3>
+          <p style={{ color: 'var(--text-muted)' }}>Upload your first bid to see it in the audit log</p>
+        </div>
+      ) : (
+        <div>
+          <div data-testid="audit-log-count" style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+            TOTAL ENTRIES: <strong style={{ color: 'var(--accent-green)' }}>{auditLog.length}</strong>
+          </div>
+          
+          {auditLog.map((entry, index) => (
+            <div key={index} data-testid={`audit-entry-${index}`} className="audit-entry">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                    <Hash size={20} style={{ color: 'var(--accent-green)' }} />
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: '600', fontFamily: 'JetBrains Mono' }}>{entry.tenderId}</h3>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                    <Clock size={16} />
+                    {formatDate(entry.timestamp)}
+                  </div>
+                </div>
+                <div className="audit-badge">{entry.status}</div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <User size={16} style={{ color: 'var(--text-muted)' }} />
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>BIDDER ID</span>
+                  </div>
+                  <div style={{ fontFamily: 'JetBrains Mono', fontSize: '0.85rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '6px', wordBreak: 'break-all', color: 'var(--text-primary)', border: '1px solid var(--border-primary)' }}>
+                    {entry.bidderId}
+                  </div>
+                </div>
+                
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <Hash size={16} style={{ color: 'var(--text-muted)' }} />
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>CRYPTOGRAPHIC HASH (SHA-3-512)</span>
+                  </div>
+                  <div style={{ fontFamily: 'JetBrains Mono', fontSize: '0.85rem', background: 'var(--bg-secondary)', padding: '0.75rem', borderRadius: '6px', wordBreak: 'break-all', color: 'var(--accent-green)', border: '1px solid var(--border-primary)' }}>
+                    {entry.bidHash}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
