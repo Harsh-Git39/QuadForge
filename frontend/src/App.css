@@ -540,6 +540,14 @@ code, pre {
   background: var(--accent-green);
 }
 
+/* Hide watermark */
+[href*="emergent"],
+img[src*="emergent"],
+a[href*="emergent.sh"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .page-title {
