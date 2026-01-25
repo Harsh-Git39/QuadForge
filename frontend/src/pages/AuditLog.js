@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Database, Clock, Hash, User, Activity } from 'lucide-react';
+import { Database, Clock, Hash, User, Activity, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -10,6 +10,7 @@ export default function AuditLog() {
   const [auditLog, setAuditLog] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [expandedBid, setExpandedBid] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -109,8 +110,40 @@ export default function AuditLog() {
                     {formatDate(entry.timestamp)}
                   </div>
                 </div>
-                <div className="audit-badge">{entry.status}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div className="audit-badge">{entry.status}</div>
+                  {entry.bidSummary && (
+                    <button
+                      onClick={() => setExpandedBid(expandedBid === index ? null : index)}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        background: 'var(--bg-secondary)',
+                        border: '1px solid var(--border-primary)',
+                        borderRadius: '6px',
+                        color: 'var(--accent-green)',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      {expandedBid === index ? 'HIDE SUMMARY' : 'VIEW SUMMARY'}
+                    </button>
+                  )}
+                </div>
               </div>
+
+              {expandedBid === index && entry.bidSummary && (
+                <div style={{ marginBottom: '1.5rem', padding: '1rem', background: 'var(--accent-green-dim)', border: '1px solid var(--accent-green)', borderRadius: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <FileText size={16} style={{ color: 'var(--accent-green)' }} />
+                    <span style={{ fontSize: '0.85rem', color: 'var(--accent-green)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.05em' }}>BID SUMMARY</span>
+                  </div>
+                  <div style={{ fontSize: '0.95rem', color: 'var(--text-primary)', lineHeight: '1.7', whiteSpace: 'pre-wrap' }}>
+                    {entry.bidSummary}
+                  </div>
+                </div>
+              )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>

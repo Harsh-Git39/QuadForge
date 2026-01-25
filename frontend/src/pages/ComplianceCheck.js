@@ -1,22 +1,75 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Brain, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Brain, AlertTriangle, CheckCircle, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 export default function ComplianceCheck() {
+  const [tenders, setTenders] = useState([]);
+  const [selectedTender, setSelectedTender] = useState(null);
+  const [bidsForTender, setBidsForTender] = useState([]);
+  const [selectedBid, setSelectedBid] = useState(null);
   const [tenderRequirements, setTenderRequirements] = useState('');
   const [bidSummary, setBidSummary] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
 
+  useEffect(() => {
+    fetchTenders();
+  }, []);
+
+  const fetchTenders = async () => {
+    try {
+      const response = await axios.get(`${API}/tenders`);
+      setTenders(response.data);
+    } catch (error) {
+      console.error('Failed to fetch tenders:', error);
+    }
+  };
+
+  const handleTenderSelect = async (e) => {
+    const tenderId = e.target.value;
+    if (!tenderId) {
+      setSelectedTender(null);
+      setTenderRequirements('');
+      setBidsForTender([]);
+      return;
+    }
+
+    const tender = tenders.find(t => t.tenderId === tenderId);
+    setSelectedTender(tender);
+    setTenderRequirements(tender.requirements || '');
+    
+    // Fetch bids for this tender
+    try {
+      const response = await axios.get(`${API}/bids/${tenderId}`);
+      setBidsForTender(response.data);
+    } catch (error) {
+      console.error('Failed to fetch bids:', error);
+      setBidsForTender([]);
+    }
+  };
+
+  const handleBidSelect = (e) => {
+    const bidderId = e.target.value;
+    if (!bidderId) {
+      setSelectedBid(null);
+      setBidSummary('');
+      return;
+    }
+
+    const bid = bidsForTender.find(b => b.bidderId === bidderId);
+    setSelectedBid(bid);
+    setBidSummary(bid.bidSummary || '');
+  };
+
   const handleCheckCompliance = async (e) => {
     e.preventDefault();
     
     if (!tenderRequirements || !bidSummary) {
-      toast.error('All fields required');
+      toast.error('Both tender requirements and bid summary required');
       return;
     }
 
@@ -54,6 +107,94 @@ export default function ComplianceCheck() {
         </p>
       </div>
 
+      {/* Tender and Bid Selection */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+        <div className="card">
+          <div className="card-header">
+            <h2 className="card-title" style={{ fontSize: '1.1rem' }}>SELECT TENDER</h2>
+            <p className="card-description" style={{ fontSize: '0.85rem' }}>Choose tender to load requirements</p>
+          </div>
+          <div style={{ position: 'relative' }}>
+            <select
+              data-testid="tender-select"
+              value={selectedTender?.tenderId || ''}
+              onChange={handleTenderSelect}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-primary)',
+                borderRadius: '8px',
+                color: 'var(--text-primary)',
+                fontSize: '1rem',
+                fontFamily: 'JetBrains Mono',
+                cursor: 'pointer',
+                appearance: 'none'
+              }}
+            >
+              <option value="">-- Select Tender --</option>
+              {tenders.map((tender, index) => (
+                <option key={index} value={tender.tenderId}>
+                  {tender.tenderId} (${tender.budget?.toLocaleString()})
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={20} style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+          </div>
+          {selectedTender && (
+            <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--accent-green-dim)', border: '1px solid var(--accent-green)', borderRadius: '6px', fontSize: '0.85rem', color: 'var(--accent-green)' }}>
+              ✓ Tender selected: {selectedTender.tenderId}
+            </div>
+          )}
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <h2 className="card-title" style={{ fontSize: '1.1rem' }}>SELECT BID</h2>
+            <p className="card-description" style={{ fontSize: '0.85rem' }}>Choose bid to load summary</p>
+          </div>
+          <div style={{ position: 'relative' }}>
+            <select
+              data-testid="bid-select"
+              value={selectedBid?.bidderId || ''}
+              onChange={handleBidSelect}
+              disabled={!selectedTender || bidsForTender.length === 0}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                background: 'var(--bg-secondary)',
+                border: '1px solid var(--border-primary)',
+                borderRadius: '8px',
+                color: 'var(--text-primary)',
+                fontSize: '1rem',
+                fontFamily: 'JetBrains Mono',
+                cursor: selectedTender && bidsForTender.length > 0 ? 'pointer' : 'not-allowed',
+                opacity: selectedTender && bidsForTender.length > 0 ? 1 : 0.5,
+                appearance: 'none'
+              }}
+            >
+              <option value="">-- Select Bid --</option>
+              {bidsForTender.map((bid, index) => (
+                <option key={index} value={bid.bidderId}>
+                  Bid {index + 1}: {bid.bidderId.substring(0, 8)}... ({new Date(bid.timestamp).toLocaleDateString()})
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={20} style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+          </div>
+          {selectedBid && (
+            <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--accent-green-dim)', border: '1px solid var(--accent-green)', borderRadius: '6px', fontSize: '0.85rem', color: 'var(--accent-green)' }}>
+              ✓ Bid selected: {selectedBid.bidderId.substring(0, 16)}...
+            </div>
+          )}
+          {selectedTender && bidsForTender.length === 0 && (
+            <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--bg-secondary)', border: '1px solid var(--border-primary)', borderRadius: '6px', fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+              No bids submitted for this tender yet
+            </div>
+          )}
+        </div>
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
         <div className="card">
           <div className="card-header">
@@ -63,7 +204,7 @@ export default function ComplianceCheck() {
           <textarea
             data-testid="tender-requirements-input"
             className="textarea-field"
-            placeholder="Must include: ISO certification, 2-year warranty, 30-day delivery..."
+            placeholder="Select a tender above or enter requirements manually..."
             value={tenderRequirements}
             onChange={(e) => setTenderRequirements(e.target.value)}
             required
@@ -78,7 +219,7 @@ export default function ComplianceCheck() {
           <textarea
             data-testid="bid-summary-input"
             className="textarea-field"
-            placeholder="We offer ISO 9001 certification, 3-year warranty, 25-day delivery..."
+            placeholder="Select a bid above or enter summary manually..."
             value={bidSummary}
             onChange={(e) => setBidSummary(e.target.value)}
             required
