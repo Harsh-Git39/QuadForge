@@ -87,6 +87,7 @@ class AuditLogEntry(BaseModel):
     timestamp: str
     bidderId: str
     status: str
+    bidSummary: Optional[str] = None
 
 class AutomationStats(BaseModel):
     total_bids: int
