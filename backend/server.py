@@ -258,16 +258,30 @@ async def create_tender(
 async def get_audit_log():
     """Retrieve immutable audit log of all sealed bids"""
     try:
-        # Fetch all bids, exclude _id and encrypted data
+        # Fetch all bids, include bidSummary now
         bids = await db.bids.find(
             {},
-            {"_id": 0, "tenderId": 1, "bidHash": 1, "timestamp": 1, "bidderId": 1, "status": 1}
+            {"_id": 0, "tenderId": 1, "bidHash": 1, "timestamp": 1, "bidderId": 1, "status": 1, "bidSummary": 1}
         ).sort("timestamp", -1).to_list(1000)
         
         return bids
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch audit log: {str(e)}")
+
+@api_router.get("/bids/{tender_id}")
+async def get_bids_for_tender(tender_id: str):
+    """Get all bids for a specific tender"""
+    try:
+        bids = await db.bids.find(
+            {"tenderId": tender_id},
+            {"_id": 0, "bidderId": 1, "bidSummary": 1, "timestamp": 1, "bidHash": 1, "status": 1}
+        ).sort("timestamp", -1).to_list(1000)
+        
+        return bids
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch bids: {str(e)}")
 
 @api_router.get("/stats", response_model=AutomationStats)
 async def get_automation_stats():
