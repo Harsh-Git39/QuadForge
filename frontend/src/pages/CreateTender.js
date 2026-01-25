@@ -84,7 +84,7 @@ export default function CreateTender() {
           CREATE TENDER
         </h1>
         <p className="page-description">
-          Define tender requirements | Set compliance criteria | Publish for bidders
+          Powered by QuadForge
         </p>
       </div>
 
