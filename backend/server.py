@@ -1,10 +1,11 @@
-from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, BackgroundTasks
+from fastapi import FastAPI, APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Form
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
+import httpx
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
@@ -13,8 +14,50 @@ from datetime import datetime, timezone
 import base64
 import asyncio
 
+logging.basicConfig(level=logging.INFO)
+
+# n8n webhook function
+async def send_n8n_webhook(
+    tender_id: str,
+    bidder_email: str,
+    bidder_id: str,
+    bid_hash: str,
+    timestamp: str,
+    file_name: str
+):
+    """Send bid sealed notification to n8n webhook"""
+    try:
+        # Updated with correct production URL
+        n8n_webhook_url = "https://shrinvas2005.app.n8n.cloud/webhook/bid-sealed"
+        
+        payload = {
+            "tenderId": tender_id,
+            "bidderEmail": bidder_email,
+            "bidderId": bidder_id,
+            "bidHash": bid_hash,
+            "timestamp": timestamp,
+            "fileName": file_name
+        }
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                n8n_webhook_url,
+                json=payload,
+                timeout=10.0
+            )
+            
+            if response.status_code == 200:
+                logging.info(f"✅ n8n webhook: Email sent to {bidder_email}")
+            else:
+                logging.warning(f"⚠️ n8n webhook: Status {response.status_code}")
+                logging.warning(f"⚠️ Response: {response.text}")
+                
+    except Exception as e:
+        logging.error(f"❌ n8n webhook failed: {e}")
+        # Don't raise - this is non-critical
+
 from encryption_utils import encrypt_file_content, generate_sha3_512_hash, generate_sha256_hash
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+from llm_wrapper import LlmChat, UserMessage
 from automation import AutomationEngine
 
 ROOT_DIR = Path(__file__).parent
@@ -109,8 +152,9 @@ async def root():
 async def seal_bid(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    tender_id: str = File(...),
-    bid_summary: str = File(...)
+    tender_id: str = Form(...),
+    bid_summary: str = Form(...),
+    bidder_email: str = Form(default="admin@tender-guardian.com")  # Remove the n8n template syntax
 ):
     """Seal a bid with automatic notifications and compliance summary"""
     try:
@@ -136,6 +180,7 @@ async def seal_bid(
             "bidderId": bidder_id,
             "status": "SEALED",
             "bidSummary": bid_summary,
+            "bidderEmail": bidder_email,
             "encryptedFileBase64": base64.b64encode(encrypted_content).decode('utf-8'),
             "iv": base64.b64encode(iv).decode('utf-8')
         }
@@ -150,10 +195,21 @@ async def seal_bid(
             bid_hash
         )
         
+        # NEW: Trigger n8n webhook for email notification
+        background_tasks.add_task(
+            send_n8n_webhook,
+            tender_id=tender_id,
+            bidder_email=bidder_email,
+            bidder_id=bidder_id,
+            bid_hash=bid_hash,
+            timestamp=timestamp,
+            file_name=file.filename
+        )
+        
         return SealBidResponse(
             success=True,
             bidHash=bid_hash,
-            message="Bid sealed with AES-256 encryption. Notification sent.",
+            message=f"Bid sealed with AES-256 encryption. Confirmation sent to {bidder_email}",
             bidderId=bidder_id,
             automated=True
         )
@@ -187,7 +243,7 @@ BID SUMMARY:
 
 Provide concise analysis and list violations as bullet points (use - or •). If compliant, state "No violations detected"."""
         
-        user_message = UserMessage(text=prompt)
+        user_message = UserMessage(content=prompt)
         response = await chat.send_message(user_message)
         
         # Parse response for violations

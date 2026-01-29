@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Upload, Lock, CheckCircle, Shield, FileText, AlertCircle } from 'lucide-react';
+import { Upload, Lock, CheckCircle, Shield, FileText, AlertCircle, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -10,6 +10,7 @@ export default function UploadBid() {
   const [file, setFile] = useState(null);
   const [tenderId, setTenderId] = useState('');
   const [bidSummary, setBidSummary] = useState('');
+  const [bidderEmail, setBidderEmail] = useState(''); // NEW
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [activeTenders, setActiveTenders] = useState([]);
@@ -57,6 +58,7 @@ export default function UploadBid() {
       formData.append('file', file);
       formData.append('tender_id', tenderId);
       formData.append('bid_summary', bidSummary);
+      formData.append('bidder_email', bidderEmail || 'admin@tender-guardian.com'); // NEW
 
       const response = await axios.post(`${API}/seal`, formData, {
         headers: {
@@ -65,11 +67,12 @@ export default function UploadBid() {
       });
 
       setResult(response.data);
-      toast.success('Bid encrypted and sealed');
+      toast.success(`Bid encrypted and sealed! Confirmation sent to ${bidderEmail || 'default email'}`);
       
       setFile(null);
       setTenderId('');
       setBidSummary('');
+      setBidderEmail(''); // NEW
       setSelectedTender(null);
       document.getElementById('file-input').value = '';
       
@@ -115,6 +118,25 @@ export default function UploadBid() {
                 onChange={(e) => setTenderId(e.target.value)}
                 required
               />
+            </div>
+
+            {/* NEW: Email Field */}
+            <div className="input-group">
+              <label className="input-label">
+                <Mail size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                YOUR EMAIL (For Confirmation)
+              </label>
+              <input
+                data-testid="bidder-email-input"
+                type="email"
+                className="input-field"
+                placeholder="your@company.com (optional - uses default if empty)"
+                value={bidderEmail}
+                onChange={(e) => setBidderEmail(e.target.value)}
+              />
+              <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                💡 Leave empty to send to default: admin@tender-guardian.com
+              </div>
             </div>
 
             <div className="input-group">
@@ -176,7 +198,7 @@ export default function UploadBid() {
               ) : (
                 <>
                   <Lock size={20} />
-                  SEAL BID
+                  SEAL BID & SEND CONFIRMATION
                 </>
               )}
             </button>
@@ -201,6 +223,13 @@ export default function UploadBid() {
                   <span className="result-label">STATUS</span>
                   <div className="result-value">
                     {result.automated ? '✓ AUTO-NOTIFICATION SENT' : 'SEALED'}
+                  </div>
+                </div>
+                {/* NEW: Email confirmation */}
+                <div className="result-item">
+                  <span className="result-label">EMAIL SENT TO</span>
+                  <div className="result-value">
+                    {bidderEmail || 'admin@tender-guardian.com'}
                   </div>
                 </div>
               </div>

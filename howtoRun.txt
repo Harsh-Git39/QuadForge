@@ -1,0 +1,45 @@
+arsh@Harsh MINGW64 ~/Desktop/teng/QuadForge/backend (main)
+$ python -m uvicorn server:app --reload --host 0.0.0.0 --port 8001
+INFO:     Will watch for changes in these directories: ['C:\\Users\\harsh\\Desktop\\teng\\QuadForge\\backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [12708] using StatReload
+INFO:     Started server process [12372]
+INFO:     Waiting for application startup.
+2026-01-28 00:05:43,712 - server - INFO - 🚀 AI Tender Guardian started - Autonomous mode enabled
+INFO:     Application startup complete.
+2026-01-28 00:05:43,960 - automation - INFO - Daily report: 0 bids, 0 updates
+INFO:     127.0.0.1:64136 - "GET /api/tenders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62189 - "GET /api/tenders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62189 - "GET /api/audit HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62189 - "GET /api/audit HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64136 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64136 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64136 - "GET /api/tenders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64136 - "GET /api/tenders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60889 - "GET /api/tenders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60889 - "GET /api/tenders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60883 - "GET /api/tenders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60883 - "GET /api/tenders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60375 - "OPTIONS /api/tender HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60375 - "POST /api/tender HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60375 - "GET /api/tenders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54722 - "GET /api/audit HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54722 - "GET /api/audit HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49259 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49259 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49259 - "GET /api/tenders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49259 - "GET /api/tenders HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63847 - "POST /api/seal HTTP/1.1" 200 OK
+2026-01-28 00:10:21,952 - automation - INFO - Bid sealed notification: MYTENDER - 4f3d2116-ae68-46f1-b2a0-0061a5ff34b3
+INFO:     127.0.0.1:55300 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55300 - "GET /api/audit HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55300 - "GET /api/stats HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55300 - "GET /api/audit HTTP/1.1" 200 OK
+
+
+
+
+For frontend :  npm start
+
+
+For DATABASE : docker run -d -p 27017:27017 --name mongodb-tender mongo:latest
